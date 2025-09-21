@@ -71,7 +71,7 @@ function ilerp
 	return (value - a) / (b - a) .
 }
 
-function display_impact_and_burn_times
+function generic_land
 {
 	if not addons:tr:available
 	{
@@ -173,91 +173,9 @@ function display_impact_and_burn_times
 		wait 0.001 .
 	}
 
-	return .
+	print("the eagle has landed.") .
 
 	// TODO when finished landing, lock SAS or steering to the normal of the terrain below, in case of uneven terrain
 	// stop for now
-
-
-
-
-
-
-
-
-	print("stable. now waiting for impact again") .
-	lock throttle to 0 .
-
-	set TARGET_COAST_SPEED to 6 .
-
-	until burn_time * .65 >= impact_time
-	{
-		print("IMPACT TIME: " + round(impact_time, 1) + "s     ") at (0, 1).
-	 	print("BURN TIME:   " + round(burn_time, 1) + "s     ") at (0, 2).
-		wait 0 .
-	}
-
-
-	until ship:status = "LANDED"
-	{
-		// figure out deltav needed to get to target vel
-		// find out how much thrust we're capable of, in m/s^2 (max_accel)
-		
-		// m/s
-		local delta_v is ship:velocity:surface:mag - TARGET_COAST_SPEED .
-
-		if max_accel = 0
-		{
-			print("max accel is 0") .
-			break .
-		}
-		// max_accel is m/s^2
-		print("----====----") at (0, 3).
-		print("burn_time: " + round(burn_time, 2) + "     ") at (0, 4).
-
-		set pid:setpoint to 0 .
-		local pid_value is -pid:update(time:seconds, burn_time) .
-		print("pid_value: " + round(pid_value, 2) + "     ") at (0, 5).
-		print("pid changerate: " + round(pid:changerate, 5) + "        ") at (0, 6) .
-		lock throttle to pid_value .
-
-		wait 0.001 .
-	}
-	print("done") .
-
-	lock throttle to 0 .
-	unlock throttle .
-
-	
-	// until ship:status = "LANDED"
-	// {
-	// 	local impact_time is addons:tr:timetillimpact .
-	// 	print(addons:tr:impactvel) at (0, 10) .
-	// 	local impact_velocity is addons:tr:impactvel:mag .
-	// 	local impact_altitude is addons:tr:impactpos:terrainheight .
-	// 	local orbit_atmosphere is ship:body:atm .
-	// 	local impact_pressure is orbit_atmosphere:altitudepressure(impact_altitude) .
-	// 	local max_accel is ship:maxthrustat(impact_pressure)/ship:mass.
-	// 	local burn_time is ship:velocity:surface:mag/max_accel.
-
-	// 	print("IMPACT TIME: " + round(impact_time, 1) + "s     ") at (0, 0).
-	// 	print("BURN TIME:   " + round(burn_time, 1) + "s     ") at (0, 1).
-	// 	print("IMPACT ? VEL: " + round(impact_velocity, 1) + "m/s     ") at (0, 3).
-	// 	print("CUR SURFACE VEL:    " + round(ship:velocity:surface:mag, 1) + "m/s     ") at (0, 4).
-	// 	
-	// 	
-	// }
-
-
 }
 
-display_impact_and_burn_times() .
-// until false
-// {
-// 	local ship_velocity_horizontal is ship:velocity:surface + ship:up():vector * -ship:verticalspeed .
-// 	print("surface vel:    " + ship:velocity:surface + ";    ") at (0, 0) .
-// 	print("orbit vel:      " + ship:velocity:orbit + ";    ") at (0, 1).
-// 	print("vert speed:     " + round(ship:verticalspeed, 2) + ";    ") at (0, 2) .
-// 	print("mag ship_vel_h: " + round(ship_velocity_horizontal:mag, 3) + ";    ") at (0, 3) .
-// 	wait 0.1 .
-// }

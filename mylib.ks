@@ -1,4 +1,8 @@
 runpath("justin/jst_orbital.ks") .
+// may need to include the below external library to correctly calculate burn duration for maneuvers
+// for now i'm just doing the naive way, calculating for current stage only and not accounting for mass loss
+// (the library requires the user to manually insert kOS part tags on fuel ducts for asparagus staging)
+// runpath("quetschke-kOSutil/sinfo.ks") .
 function maintain_target_apoapsis
 {
 	parameter TARGET .
@@ -51,37 +55,19 @@ function execute_node
 	set sasmode to "MANEUVER".
 
 	local lock max_accel to ship:maxthrust/ship:mass. // in deltav per second (or m/s^2)
-	local burn_time is NEXTNODE:deltav:mag/max_accel.
+	local lock burn_time to NEXTNODE:deltav:mag/max_accel.
 
 	wait until NEXTNODE:eta <= (burn_time/2).
 
 	local done is false.
 	local initial_deltav is NEXTNODE:deltav.
 
-	local pid is pidloop(0.2, 0, 0.1, -1, 1) .
-	set pid:setpoint to 0 .
-	lock throttle to -pid:update(time:seconds, NEXTNODE:deltav:mag) .
-	clearscreen .
-	until vdot(initial_deltav, NEXTNODE:deltav) < 0
-	{
-		// local x is -pid:update(time:seconds, NEXTNODE:deltav:mag) .
-		// lock throttle to x .
-		print("pid_value:   " + round(pid:output, 2) + "    ") at (0, 0) .
-		print("pid:change:  " + round(pid:changerate, 3) + "    ") at (0, 1) .
-		print("pid:iterm:   " + round(pid:iterm,3) + "    ") at (0, 2) .
-		print("pid:dterm:   " + round(pid:dterm,3) + "    ") at (0, 3) .
-		print("pid:setpoint:" + round(pid:setpoint, 1) + "    ") at (0, 4) .
-		print("pid:input:   " + round(pid:input, 1) + "    ") at (0, 5) .
-		print("pid:error:   " + round(pid:error, 2) + "    ") at (0, 6) .
-		print("> burn_time: " + round(NEXTNODE:deltav:mag / max_accel, 2) + "    ") at (0, 7) .
-		wait 0.001 .
-	}
+	// when 1 second left of burn time, slow down throttle until we're doing 0.1 m/s^2 of thrust exactly
+	local lock target_throttle to burn_time^0.8.
+	lock throttle to max(0.1 / max_accel, target_throttle) .
+
+	wait until vdot(initial_deltav, NEXTNODE:deltav) < 0 .
 	lock throttle to 0 .
-	// lock throttle to 1.
-	// wait until NEXTNODE:deltav:mag < 50.
-	// lock throttle to NEXTNODE:deltav:mag / 50 + 0.01.
-	// wait until vdot(initial_deltav, NEXTNODE:deltav) < 0.
-	// lock throttle to 0.
 
 	remove NEXTNODE.
 	return 0 .

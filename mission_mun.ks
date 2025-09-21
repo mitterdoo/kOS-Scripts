@@ -29,11 +29,4 @@ function main
 	// WHEN GEAR is off
 
 }
-//main() .
-when (stage:deltav:current < 0.1) then
-{
-	stage .
-}
-set circ_node to get_circular_orbit_node() .
-add circ_node .
-execute_node() .
+main() .
